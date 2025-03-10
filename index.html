@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <title>Pertandingan Dashboard dengan Login</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
@@ -12,10 +13,12 @@
             right: 20px;
             z-index: 1000;
         }
+
         .score-buttons button {
             margin: 2px;
             width: 35px;
         }
+
         .login-container {
             max-width: 400px;
             margin: 100px auto;
@@ -23,7 +26,16 @@
             border: 1px solid #ddd;
             border-radius: 10px;
         }
-        @media (max-width: 768px) {
+
+        @media (max-width: 800px) {
+            .full-width-modal {
+                max-width: 100%;
+                margin: 10px;
+                /* Tambahkan margin agar tidak terlalu rapat ke tepi layar */
+            }
+        }
+
+        /* @media (max-width: 768px) {
             table {
                 font-size: 12px;
             }
@@ -53,431 +65,627 @@
             .login-container {
                 width: 90%;
             }
-        }
+        } */
     </style>
 </head>
+
 <body>
 
-<div id="app" class="container mt-3">
+    <div id="app" class="container mt-3">
 
-    <div v-if="!isLoggedIn" class="login-container">
-        <h4 class="text-center">Login</h4>
-        <input type="text" class="form-control mb-2" placeholder="Username" v-model="username">
-        <input type="password" class="form-control mb-2" placeholder="Password" v-model="password">
-        <button class="btn btn-primary btn-block" @click="checkLogin">Login</button>
-    </div>
-
-    <div v-if="isLoggedIn">
-        <h2>Dashboard Pertandingan TTC {{lokasi}} start 10 Maret 2025</h2>
-
-        <div v-if="dashboardMatches.length > 0">
-            <table class="table table-bordered table-sm">
-                <thead>
-                    <tr>
-                        <th>No</th>
-                        <th>Tanggal</th>
-                        <th>Pemain Tim 1</th>
-                        <th>Skor 1</th>
-                        <th>Skor 2</th>
-                        <th>Pemain Tim 2</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="(match, index) in dashboardMatches" :key="index">
-                        <td>{{ index + 1 }}</td>
-                        <td>{{ formatTanggal(match.tanggal) }}</td>
-                        <td>{{ match.namaPemainTim1}}</td>
-                        <td>{{ match.skorTim1 }}</td>
-                        <td>{{ match.skorTim2 }}</td>
-                        <td>{{ match.namaPemainTim2 }}</td>
-                    </tr>
-                </tbody>
-            </table>
+        <div v-if="!isLoggedIn" class="login-container">
+            <h4 class="text-center">Login</h4>
+            <input type="text" class="form-control mb-2" placeholder="Username" v-model="username">
+            <input type="password" class="form-control mb-2" placeholder="Password" v-model="password">
+            <button class="btn btn-primary btn-block" @click="checkLogin">Login</button>
         </div>
 
-        <h3>Riwayat Performa Pemain</h3>
-        <table class="table table-striped table-sm">
-            <thead>
-                <tr>
-                    <th>No</th>
-                    <th>Tanggal</th>
-                    <th>Pemain</th>
-                    <th>Pasangan</th>
-                    <th>Skor</th>
-                    <th>Hasil</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr v-for="(record, index) in playerRecords" :key="'pr-' + index">
-                    <td>{{ index + 1 }}</td>
-                    <td>{{ formatTanggal(record.tanggal) }}</td>
-                    <td>{{ record.player }}</td>
-                    <td>{{ record.pasangan }}</td>
-                    <td>{{ record.skor }}</td>
-                    <td :class="{'text-success': record.hasil === 'Menang', 'text-danger': record.hasil === 'Kalah'}">
-                        {{ record.hasil }}
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+        <div v-if="isLoggedIn">
+            <div class="container mt-4">
+                <h2 class="text-center">Dashboard Pertandingan TTC {{lokasi}} </h2>
+                <h3 class="text-center">start 10 Maret 2025</h3>
 
-        <h3>Ranking Pemain</h3>
-        <table class="table table-bordered table-sm">
-            <thead>
-                <tr>
-                    <th>Ranking</th>
-                    <th>Nama</th>
-                    <th>Lokasi</th>
-                    <th>Menang</th>
-                    <th>Kalah</th>
-                    <th>Persentase</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr v-for="(player, index) in sortedPlayersByPercentage" :key="player.id">
-                    <td>{{ index + 1 }}</td>
-                    <td>{{ player.nama }}</td>
-                    <td>{{ player.lokasi }}</td>
-                    <td>{{ player.menang }}</td>
-                    <td>{{ player.kalah }}</td>
-                    <td>{{ (player['%'] * 100).toFixed(2) }}%</td>
-                </tr>
-            </tbody>
-        </table>
 
-        <button class="btn btn-danger fixed-button" @click="openModal()">Rekam</button>
+                <h2>Statistik Pemain</h2>
 
-        <div class="modal fade" :class="{'show': showTeamModal}" style="display: block;" v-if="showTeamModal">
-            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Pilih Tim dan Tanggal</h5>
-                        <button type="button" class="close" @click="showTeamModal = false">&times;</button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="form-group">
-                            <label for="matchDate">Tanggal Pertandingan</label>
-                            <input type="date" class="form-control" v-model="matchDate">
+                <div>
+                    <label for="playerSelect">Pilih Pemain:</label>
+                    <select v-model="selectedPlayer" id="playerSelect">
+                        <option value="">-- Pilih Pemain --</option>
+                        <option v-for="player in sortedPlayers" :value="player">{{ player }}</option>
+                    </select>
+                    <label>Pilih Tahun:</label>
+                    <select v-model="selectedYear">
+                        <option v-for="year in availableYears" :key="year" :value="year">{{ year }}</option>
+                    </select>
+
+                    <label>Pilih Bulan:</label>
+                    <select v-model="selectedMonth">
+                        <option value="">all</option>
+                        <option v-for="month in availableMonths" :key="month" :value="month">{{ month }}</option>
+                    </select>
+
+                    <h3>(Menang: {{ totalWins }} | <span style="color: red;"> Kalah: {{ totalLosses }}</span>)</h3>
+                    <p class="text-primary">Paling banyak menang dengan pasangan:<strong> {{ topWinningPartner }}</strong></p>
+                    <p>Paling banyak kalah saat berpasangan dengan :<strong> {{ topLosingPartner }}</strong></p>
+                    <p>Paling banyak kalah ketika melawan pasangan:<strong> {{ topLosingOpponentPair }}</strong></p>
+                    <p>Paling banyak kalah ketika melawan (1 pemain):<strong> {{ topLosingOpponent }}</strong></p>
+                </div>
+
+                
+
+
+
+                <div class="table-responsive" v-if="dashboardMatches1.length > 0">
+                    <table class="table table-bordered table-striped table-hover table-sm">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th>No</th>
+                                <th>Tanggal</th>
+                                <th>Pemain Tim 1</th>
+                                <th>Skor 1</th>
+                                <th>Skor 2</th>
+                                <th>Pemain Tim 2</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="(match, index) in dashboardMatches1" :key="index">
+                                <td>{{ index + 1 }}</td>
+                                <td>{{ formatTanggal(match.tanggal) }}</td>
+                                <td :class="{ 'text-danger': match.skorTim1 < match.skorTim2 }">{{ match.namaPemainTim1 }}</td>
+                                <td :class="{ 'text-danger': match.skorTim1 < match.skorTim2 }">{{ match.skorTim1 }}</td>
+                                <td :class="{ 'text-danger': match.skorTim2 < match.skorTim1 }">{{ match.skorTim2 }}</td>
+                                <td :class="{ 'text-danger': match.skorTim2 < match.skorTim1 }">{{ match.namaPemainTim2 }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <hr>
+<!-- {{dashboardMatches}} -->
+                <div class="table-responsive" v-if="dashboardMatches.length > 0">
+                    <table class="table table-bordered table-striped table-hover table-sm">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th>No</th>
+                                <th>Tanggal</th>
+                                <th>Pemain Tim 1</th>
+                                <th>Skor 1</th>
+                                <th>Skor 2</th>
+                                <th>Pemain Tim 2</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="(match, index) in AlldashboardMatches" :key="index">
+                                <td>{{ index + 1 }}</td>
+                                <td>{{ formatTanggal(match.tanggal) }}</td>
+                                <td>{{ match.namaPemainTim1 }}</td>
+                                <td>{{ match.skorTim1 }}</td>
+                                <td>{{ match.skorTim2 }}</td>
+                                <td>{{ match.namaPemainTim2 }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3 class="mt-4">Riwayat Performa Pemain</h3>
+                <div class="table-responsive">
+                    <table class="table table-striped table-sm">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>No</th>
+                                <th>Tanggal</th>
+                                <th>Pemain</th>
+                                <th>Pasangan</th>
+                                <th>Skor</th>
+                                <th>Hasil</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="(record, index) in playerRecords" :key="'pr-' + index">
+                                <td>{{ index + 1 }}</td>
+                                <td>{{ formatTanggal(record.tanggal) }}</td>
+                                <td>{{ record.player }}</td>
+                                <td>{{ record.pasangan }}</td>
+                                <td>{{ record.skor }}</td>
+                                <td
+                                    :class="{'text-success': record.hasil === 'Menang', 'text-danger': record.hasil === 'Kalah'}">
+                                    {{ record.hasil }}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3 class="mt-4">Ranking Pemain</h3>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th>Ranking</th>
+                                <th>Nama</th>
+                                <th>Lokasi</th>
+                                <th>Menang</th>
+                                <th>Kalah</th>
+                                <th>Persentase</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="(player, index) in sortedPlayersByPercentage" :key="player.id">
+                                <td>{{ index + 1 }}</td>
+                                <td>{{ player.nama }}</td>
+                                <td>{{ player.lokasi }}</td>
+                                <td>{{ player.menang }}</td>
+                                <td>{{ player.kalah }}</td>
+                                <td>{{ (player['%'] * 100).toFixed(2) }}%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+
+            <button class="btn btn-danger fixed-button" @click="openModal()">Rekam</button>
+
+            <div class="modal fade" :class="{'show': showTeamModal}" style="display: block;" v-if="showTeamModal">
+                <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable full-width-modal">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Pilih Tim dan Tanggal</h5>
+                            <button type="button" class="close" @click="showTeamModal = false">&times;</button>
                         </div>
-                        <div class="row">
-                            <div class="col-6 mb-2">
-                                <button class="btn btn-primary btn-block" @click="selectTeam('Tim 1')">
-                                    Tim 1 <br><small>{{ displayTeamPlayers('Tim 1') }}</small>
-                                </button>
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label for="matchDate">Tanggal Pertandingan</label>
+                                <input type="date" class="form-control" v-model="matchDate">
                             </div>
-                            <div class="col-6 mb-2">
-                                <button class="btn btn-success btn-block" @click="selectTeam('Tim 2')">
-                                    Tim 2 <br><small>{{ displayTeamPlayers('Tim 2') }}</small>
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="row mt-3">
-                            <div class="col-6">
-                                <h5>Skor Tim 1</h5>
-                                <div class="d-flex flex-wrap justify-content-center score-buttons">
-                                    <button
-                                        class="btn btn-outline-primary"
-                                        :class="{'btn-primary text-white': scores['Tim 1'] === score}"
-                                        v-for="score in 10"
-                                        :key="'t1-'+score"
-                                        @click="setScore('Tim 1', score)">
-                                        {{ score }}
+                            <div class="row">
+                                <div class="col-sm-6 mb-2">
+                                    <button class="btn btn-primary btn-block" @click="selectTeam('Tim 1')">
+                                        Tim 1 <br><small>{{ displayTeamPlayers('Tim 1') }}</small>
+                                    </button>
+                                </div>
+                                <div class="col-sm-6 mb-2">
+                                    <button class="btn btn-success btn-block" @click="selectTeam('Tim 2')">
+                                        Tim 2 <br><small>{{ displayTeamPlayers('Tim 2') }}</small>
                                     </button>
                                 </div>
                             </div>
-                            <div class="col-6">
-                                <h5>Skor Tim 2</h5>
-                                <div class="d-flex flex-wrap justify-content-center score-buttons">
-                                    <button
-                                        class="btn btn-outline-success"
-                                        :class="{'btn-success text-white': scores['Tim 2'] === score}"
-                                        v-for="score in 10"
-                                        :key="'t2-'+score"
-                                        @click="setScore('Tim 2', score)">
-                                        {{ score }}
-                                    </button>
+
+                            <div class="row mt-3">
+                                <div class="col-sm-6 mb-3">
+                                    <h5>Skor Tim 1</h5>
+                                    <div class="d-flex flex-wrap justify-content-center score-buttons">
+                                        <button class="btn btn-outline-primary m-1"
+                                            :class="{'btn-primary text-white': scores['Tim 1'] === score}"
+                                            v-for="score in 10" :key="'t1-'+score" @click="setScore('Tim 1', score)">
+                                            {{ score }}
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6 mb-3">
+                                    <h5>Skor Tim 2</h5>
+                                    <div class="d-flex flex-wrap justify-content-center score-buttons">
+                                        <button class="btn btn-outline-success m-1"
+                                            :class="{'btn-success text-white': scores['Tim 2'] === score}"
+                                            v-for="score in 10" :key="'t2-'+score" @click="setScore('Tim 2', score)">
+                                            {{ score }}
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
+
+                            <button class="btn btn-primary mt-3 btn-block" @click="saveData()">Simpan</button>
                         </div>
-
-                        <button class="btn btn-primary mt-3 btn-block" @click="saveData()">Simpan</button>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div class="modal fade" :class="{'show': showPlayerModal}" style="display: block;" v-if="showPlayerModal">
-            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Pilih Pemain untuk {{ selectedTeam }}</h5>
-                        <button type="button" class="close" @click="showPlayerModal = false">&times;</button>
-                    </div>
-                    <div class="modal-body">
-                        <button class="btn btn-outline-secondary btn-block mb-2"
-                                v-for="player in sortedAvailablePlayers"
-                                :key="player"
-                                @click="addPlayerToTeam(player)">
-                            {{ player }}
-                        </button>
+            <div class="modal fade" :class="{'show': showPlayerModal}" style="display: block;" v-if="showPlayerModal">
+                <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Pilih Pemain untuk {{ selectedTeam }}</h5>
+                            <button type="button" class="close" @click="showPlayerModal = false">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <button class="btn btn-outline-secondary btn-block mb-2"
+                                v-for="player in sortedAvailablePlayers" :key="player" @click="addPlayerToTeam(player)">
+                                {{ player }}
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
+
         </div>
 
     </div>
 
-</div>
+    <script>
+        new Vue({
+            el: '#app',
+            data: {
+                isLoggedIn: true,
+                username: '',
+                password: '',
+                showTeamModal: false,
+                showPlayerModal: false,
+                matchDate: new Date().toISOString().slice(0, 10),
+                selectedTeam: '',
+                teams: { 'Tim 1': [], 'Tim 2': [] },
+                scores: { 'Tim 1': null, 'Tim 2': null },
+                dashboardMatches: [],
+                allPlayers1: [{ "id": 1, "nama": "Kukuh", "row": 2 }, { "id": 2, "nama": "Misbach", "row": 3 }, { "id": 3, "nama": "Ape", "row": 4 }, { "id": 4, "nama": "Idur", "row": 5 }, { "id": 5, "nama": "Nurdin", "row": 6 }, { "id": 6, "nama": "Taufik", "row": 7 }],
+                playerRecords: [],  // <--- Tambahkan untuk menyimpan data per pemain
+                lokasi: 'Surabaya',
+                selectedPlayer: "",
+                selectedYear: new Date().getFullYear(), // Tahun default sekarang
+                selectedMonth: "", // Bulan kosong (berarti semua bulan)
+            },
+            computed: {
+                AlldashboardMatches() {
+    return this.dashboardMatches.slice().sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
+},
 
-<script>
-new Vue({
-    el: '#app',
-    data: {
-        isLoggedIn: true,
-        username: '',
-        password: '',
-        showTeamModal: false,
-        showPlayerModal: false,
-        matchDate: new Date().toISOString().slice(0, 10),
-        selectedTeam: '',
-        teams: { 'Tim 1': [], 'Tim 2': [] },
-        scores: { 'Tim 1': null, 'Tim 2': null },
-        dashboardMatches: [],
-        allPlayers1: [ { "id": 1, "nama": "Kukuh", "row": 2 }, { "id": 2, "nama": "Misbach", "row": 3 }, { "id": 3, "nama": "Ape", "row": 4 }, { "id": 4, "nama": "Idur", "row": 5 }, { "id": 5, "nama": "Nurdin", "row": 6 }, { "id": 6, "nama": "Taufik", "row": 7 } ],
-        playerRecords: [],  // <--- Tambahkan untuk menyimpan data per pemain
-        lokasi:'Surabaya',
-    },
-    computed: {
-        allPlayers() {
-        return this.allPlayers1.map(player => player.nama);
-    },
-        sortedPlayers() {
-            return this.allPlayers.slice().sort();
-        },
-        sortedAvailablePlayers() {
-            const selectedPlayers = [...this.teams['Tim 1'], ...this.teams['Tim 2']];
-            return this.sortedPlayers.filter(player => !selectedPlayers.includes(player));
-        },
-        sortedPlayersByPercentage() {
-            return [...this.allPlayers1].sort((a, b) => b['%'] - a['%']);
-    },
-    sortedPlayersByMenang() {
-        return [...this.allPlayers1].sort((a, b) => b['%'] - a['%']);
-    },
+                dashboardMatches1() {
+    if (!this.selectedPlayer) return [];
+
+    return this.dashboardMatches
+        .filter(match =>
+            match.namaPemainTim1.includes(this.selectedPlayer) || 
+            match.namaPemainTim2.includes(this.selectedPlayer)
+        )
+        .sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal)); // Urutkan dari terbaru ke terlama
+},
+
+                availableYears() {
+    // Ambil semua tahun unik dari playerRecords
+    let years = [...new Set(this.playerRecords.map(record => new Date(record.tanggal).getFullYear()))];
+
+    // Tambahkan 2025 jika belum ada
+    if (!years.includes(2025)) {
+        years.push(2025);
+    }
+
+    // Sortir tahun dari yang terbesar ke terkecil
+    return years.sort((a, b) => b - a);
+},
+
+                availableMonths() {
+                    // Tambahkan "00" untuk semua bulan, lalu daftar bulan dari 01 hingga 12
+                    return [...Array.from({ length: 12 }, (_, i) => (i + 1).toString().padStart(2, "0"))];
+                },
+                filteredRecords() {
+                    return this.playerRecords.filter(record => {
+                        const recordDate = new Date(record.tanggal);
+                        const recordYear = recordDate.getFullYear();
+                        const recordMonth = (recordDate.getMonth() + 1).toString().padStart(2, "0");
+
+                        return (
+                            recordYear === this.selectedYear &&
+                            (this.selectedMonth === "" || recordMonth === this.selectedMonth)
+                        );
+                    });
+                },
+                totalWins() {
+                    return this.filteredRecords.filter(record => record.player === this.selectedPlayer && record.hasil === "Menang").length;
+                },
+                totalLosses() {
+                    return this.filteredRecords.filter(record => record.player === this.selectedPlayer && record.hasil === "Kalah").length;
+                },
+                topWinningPartner() {
+                    return this.getMostFrequentPair("Menang");
+                },
+                topLosingPartner() {
+                    return this.getMostFrequentPair("Kalah");
+                },
+                topLosingOpponentPair() {
+                    return this.getMostFrequentOpponent("Kalah", "lawan");
+                },
+                topLosingOpponent() {
+                    return this.getMostFrequentOpponent("Kalah", "lawan_satu");
+                },
 
 
-    },
-    methods: {
-        formatTanggal(tanggal) {
-        if (!tanggal) return '';
-        const date = new Date(tanggal);
-        return date.toISOString().split('T')[0];  // Ambil bagian YYYY-MM-DD
-    },
-        checkLogin() {
-            if (this.password === '123456') {
-                this.isLoggedIn = true;
+                allPlayers() {
+                    return this.allPlayers1.map(player => player.nama);
+                },
+                sortedPlayers() {
+                    return this.allPlayers.slice().sort();
+                },
+                sortedAvailablePlayers() {
+                    const selectedPlayers = [...this.teams['Tim 1'], ...this.teams['Tim 2']];
+                    return this.sortedPlayers.filter(player => !selectedPlayers.includes(player));
+                },
+                sortedPlayersByPercentage() {
+                    return [...this.allPlayers1].sort((a, b) => b['%'] - a['%']);
+                },
+                sortedPlayersByMenang() {
+                    return [...this.allPlayers1].sort((a, b) => b['%'] - a['%']);
+                },
+
+
+            },
+            methods: {
+                getMostFrequentPair(resultType) {
+                    const pairs = this.filteredRecords
+                        .filter(record => record.player === this.selectedPlayer && record.hasil === resultType)
+                        .map(record => record.pasangan);
+
+                    return this.countOccurrences(pairs);
+                },
+                getMostFrequentOpponent(resultType, key) {
+    const opponents = this.filteredRecords
+        .filter(record => record.player === this.selectedPlayer && record.hasil === resultType)
+        .map(record => {
+            if (key === "lawan_satu") {
+                return record.lawan.split(", ")[0]; // Ambil hanya satu lawan
             } else {
-                alert('Password salah');
+                // **SORT PASANGAN LAWAN AGAR URUTAN SELALU KONSISTEN**
+                return record.lawan.split(", ").sort().join(", ");
             }
-        },
-        openModal() {
-            this.resetForm();
-            this.showTeamModal = true;
-        },
-        selectTeam(team) {
-            this.selectedTeam = team;
-            this.showPlayerModal = true;
-        },
-        addPlayerToTeam(player) {
-            if (this.teams[this.selectedTeam].length < 2) {
-                this.teams[this.selectedTeam].push(player);
-            }
-            if (this.teams[this.selectedTeam].length >= 2) {
-                this.showPlayerModal = false;
-            }
-        },
-        setScore(team, score) {
-            this.scores[team] = score;
-        },
-        displayTeamPlayers(team) {
-            return this.teams[team].join(', ') || '-';
-        },
-        saveData() {
-    const newMatch = {
-        date: this.matchDate,
-        team1Players: [...this.teams['Tim 1']],
-        team1Score: this.scores['Tim 1'],
-        team2Score: this.scores['Tim 2'],
-        team2Players: [...this.teams['Tim 2']]
-    };
-    this.dashboardMatches.push(newMatch);
-
-    // Generate playerRecords baru dari pertandingan ini saja
-    this.playerRecords = [];
-
-    this.teams['Tim 1'].forEach(player => {
-        this.playerRecords.push({
-            tanggal: this.matchDate,
-            player: player,
-            pasangan: this.teams['Tim 1'].filter(p => p !== player).join(', ') || '-',
-            skor: `${this.scores['Tim 1']} - ${this.scores['Tim 2']}`,
-            hasil: this.scores['Tim 1'] > this.scores['Tim 2'] ? 'Menang' : 'Kalah'
         });
-    });
 
-    this.teams['Tim 2'].forEach(player => {
-        this.playerRecords.push({
-            tanggal: this.matchDate,
-            player: player,
-            pasangan: this.teams['Tim 2'].filter(p => p !== player).join(', ') || '-',
-            skor: `${this.scores['Tim 2']} - ${this.scores['Tim 1']}`,
-            hasil: this.scores['Tim 2'] > this.scores['Tim 1'] ? 'Menang' : 'Kalah'
-        });
-    });
+    return this.countOccurrences(opponents);
+},
 
-    // Kirim ke database
-    this.savePlayerRecordsToDB();
-    this.saveMatchToDB();
+                countOccurrences(arr) {
+                    const countMap = arr.reduce((acc, item) => {
+                        acc[item] = (acc[item] || 0) + 1;
+                        return acc;
+                    }, {});
 
-    this.showTeamModal = false;
-    this.resetForm();
+                    const maxCount = Math.max(...Object.values(countMap), 0);
+                    const mostFrequent = Object.entries(countMap)
+                        .filter(([_, count]) => count === maxCount)
+                        .map(([name, count]) => `${name} (${count}x)`)
+                        .join(", ") || "-";
 
+                    return mostFrequent;
+                },
+
+
+
+
+
+
+
+                formatTanggal(tanggal) {
+                    if (!tanggal) return '';
+
+                    const date = new Date(tanggal);
+
+                    // Pastikan format YYYY-MM-DD dengan zona waktu lokal
+                    return date.toLocaleDateString('id-ID', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        timeZone: 'Asia/Jakarta'
+                    }).split('/').reverse().join('-'); // Konversi ke format YYYY-MM-DD
+                },
+                checkLogin() {
+                    if (this.password === '123456') {
+                        this.isLoggedIn = true;
+                    } else {
+                        alert('Password salah');
+                    }
+                },
+                openModal() {
+                    this.resetForm();
+                    this.showTeamModal = true;
+                },
+                selectTeam(team) {
+                    this.selectedTeam = team;
+                    this.showPlayerModal = true;
+                },
+                addPlayerToTeam(player) {
+                    if (this.teams[this.selectedTeam].length < 2) {
+                        this.teams[this.selectedTeam].push(player);
+                    }
+                    if (this.teams[this.selectedTeam].length >= 2) {
+                        this.showPlayerModal = false;
+                    }
+                },
+                setScore(team, score) {
+                    this.scores[team] = score;
+                },
+                displayTeamPlayers(team) {
+                    return this.teams[team].join(', ') || '-';
+                },
+                saveData() {
+                    const newMatch = {
+                        date: this.matchDate,
+                        team1Players: [...this.teams['Tim 1']],
+                        team1Score: this.scores['Tim 1'],
+                        team2Score: this.scores['Tim 2'],
+                        team2Players: [...this.teams['Tim 2']]
+                    };
+                    this.dashboardMatches.push(newMatch);
+
+                    // Generate playerRecords baru dari pertandingan ini saja
+                    this.playerRecords = [];
+
+                    this.teams['Tim 1'].forEach(player => {
+                        this.playerRecords.push({
+                            tanggal: this.matchDate,
+                            player: player,
+                            pasangan: this.teams['Tim 1'].filter(p => p !== player).join(', ') || '-',
+                            lawan: this.teams['Tim 2'].join(', '), // Tambahkan lawan dari Tim 2
+                            skor: `${this.scores['Tim 1']} - ${this.scores['Tim 2']}`,
+                            hasil: this.scores['Tim 1'] > this.scores['Tim 2'] ? 'Menang' : 'Kalah'
+                        });
+                    });
+
+                    this.teams['Tim 2'].forEach(player => {
+                        this.playerRecords.push({
+                            tanggal: this.matchDate,
+                            player: player,
+                            pasangan: this.teams['Tim 2'].filter(p => p !== player).join(', ') || '-',
+                            lawan: this.teams['Tim 1'].join(', '), // Tambahkan lawan dari Tim 1
+                            skor: `${this.scores['Tim 2']} - ${this.scores['Tim 1']}`,
+                            hasil: this.scores['Tim 2'] > this.scores['Tim 1'] ? 'Menang' : 'Kalah'
+                        });
+                    });
+
+                    // Kirim ke database
+                    this.savePlayerRecordsToDB();
+                    this.saveMatchToDB();
+
+                    this.showTeamModal = false;
+                    this.resetForm();
+
+                    setTimeout(() => {
     this.ambilDataMatches();
-    // this.ambilDataRecords();
-},
-
-saveMatchToDB() {
-    const waktu1 = Date.now();
-
-    const namaPemainTim1 = this.teams['Tim 1'].join(", ");
-    const namaPemainTim2 = this.teams['Tim 2'].join(", ");
-
-    const lin = `https://script.google.com/macros/s/AKfycbwwd67df19vRqNmxRIsnfyYhqzaMDiDTXHmHHJW7IHiHoWHtGLLLKf-rnqJqTZRkVLw/exec?action=insert&table=matches&data=` +
-        encodeURIComponent(JSON.stringify({
-            id: waktu1,
-            tanggal: this.matchDate,
-            namaPemainTim1: namaPemainTim1,
-            skorTim1: this.scores['Tim 1'],
-            skorTim2: this.scores['Tim 2'],
-            namaPemainTim2: namaPemainTim2,
-            lokasi: this.lokasi  // lokasi ditambahkan di sini
-        }));
-
-    console.log("Kirim data pertandingan ke DB:", lin);
-
-    $.ajax({
-        type: "GET",
-        url: lin,
-        crossDomain: true,
-        dataType: "jsonp",
-        // success: function (resultData) {
-        //     console.log("Data pertandingan berhasil disimpan:", resultData);
-        // },
-        // error: function (jqXHR, textStatus, errorThrown) {
-        //     console.error("Gagal menyimpan data pertandingan:", textStatus, errorThrown);
-        //     console.log("Response Text:", jqXHR.responseText);
-        // }
-    });
-},
+    this.ambilDataRecords();
+}, 2000);
+                },
 
 
+                saveMatchToDB() {
+                    const waktu1 = Date.now();
+
+                    const namaPemainTim1 = this.teams['Tim 1'].join(", ");
+                    const namaPemainTim2 = this.teams['Tim 2'].join(", ");
+
+                    const lin = `https://script.google.com/macros/s/AKfycbwwd67df19vRqNmxRIsnfyYhqzaMDiDTXHmHHJW7IHiHoWHtGLLLKf-rnqJqTZRkVLw/exec?action=insert&table=matches&data=` +
+                        encodeURIComponent(JSON.stringify({
+                            id: waktu1,
+                            tanggal: this.matchDate,
+                            namaPemainTim1: namaPemainTim1,
+                            skorTim1: this.scores['Tim 1'],
+                            skorTim2: this.scores['Tim 2'],
+                            namaPemainTim2: namaPemainTim2,
+                            lokasi: this.lokasi  // lokasi ditambahkan di sini
+                        }));
+
+                    console.log("Kirim data pertandingan ke DB:", lin);
+
+                    $.ajax({
+                        type: "GET",
+                        url: lin,
+                        crossDomain: true,
+                        dataType: "jsonp",
+                        // success: function (resultData) {
+                        //     console.log("Data pertandingan berhasil disimpan:", resultData);
+                        // },
+                        // error: function (jqXHR, textStatus, errorThrown) {
+                        //     console.error("Gagal menyimpan data pertandingan:", textStatus, errorThrown);
+                        //     console.log("Response Text:", jqXHR.responseText);
+                        // }
+                    });
+                },
 
 
 
-        resetForm() {
-            this.matchDate = new Date().toISOString().substr(0, 10);
-            this.teams = { 'Tim 1': [], 'Tim 2': [] };
-            this.scores = { 'Tim 1': null, 'Tim 2': null };
-            this.selectedTeam = '';
-        },
-        savePlayerRecordsToDB() {
-    const playerDataArray = this.playerRecords;
-    playerDataArray.forEach((record) => {
-        const waktu1 = Date.now();  // ID unik pakai timestamp
 
-        // Data yang akan dikirim
-        const tanggal = record.tanggal;
-        const player = record.player;
-        const pasangan = record.pasangan;
-        const skor = record.skor;
-        const hasil = record.hasil;
 
-        const lin = `https://script.google.com/macros/s/AKfycbwwd67df19vRqNmxRIsnfyYhqzaMDiDTXHmHHJW7IHiHoWHtGLLLKf-rnqJqTZRkVLw/exec?action=insert&table=records&data=` +
-                    encodeURIComponent(JSON.stringify({
-                        id: waktu1,
-                        tanggal: tanggal,
-                        player: player,
-                        pasangan: pasangan,
-                        skor: skor,
-                        hasil: hasil
-                    }));
+                resetForm() {
+                    this.matchDate = new Date().toISOString().substr(0, 10);
+                    this.teams = { 'Tim 1': [], 'Tim 2': [] };
+                    this.scores = { 'Tim 1': null, 'Tim 2': null };
+                    this.selectedTeam = '';
+                    this.selectedPlayer = '';
+                },
+                savePlayerRecordsToDB() {
+                    const playerDataArray = this.playerRecords;
+                    console.log(playerDataArray);
+                    playerDataArray.forEach((record) => {
+                        const waktu1 = Date.now();  // ID unik pakai timestamp
 
-        let app = this;
-        $.ajax({
-            type: "GET",
-            url: lin,
-            crossDomain: true,
-            dataType: "jsonp",  // Sesuaikan dengan handler di Apps Script
-            // success: function (resultData) {
-            //     console.log("Data player berhasil disimpan:", player);
-            // },
-            // error: function () {
-            //     console.error("Gagal menyimpan data:", player);
-            // }
-        }
-        
-    );
-    console.log("Data player berhasil disimpan:", player);
-    });
+                        // Data yang akan dikirim
+                        const tanggal = record.tanggal;
+                        const player = record.player;
+                        const pasangan = record.pasangan;
+                        const skor = record.skor;
+                        const hasil = record.hasil;
+                        const lawan = record.lawan || "Tidak Diketahui";  // Tambahkan default jika lawan tidak ada
 
-},
-ambilDataPlayer() {
-            this.databaseRiil = [];
+                        const lin = `https://script.google.com/macros/s/AKfycbwwd67df19vRqNmxRIsnfyYhqzaMDiDTXHmHHJW7IHiHoWHtGLLLKf-rnqJqTZRkVLw/exec
+?action=insert
+&table=records
+&data=${encodeURIComponent(JSON.stringify({
+                            id: waktu1,
+                            tanggal,
+                            player,
+                            pasangan,
+                            skor,
+                            hasil,
+                            lawan
+                        }))}`;
 
-            // var url ="https://script.google.com/macros/s/AKfycbyc7wzSrUGxQhcBN5EfVC-rNRj3wncZJOVTWAChXtSwnrHkGjoaoI91bggme_fUOIP9/exec?action=read&table=query";
-            var url =
-              "https://script.google.com/macros/s/AKfycbwwd67df19vRqNmxRIsnfyYhqzaMDiDTXHmHHJW7IHiHoWHtGLLLKf-rnqJqTZRkVLw/exec?action=read&table=players";
+                        $.ajax({
+                            type: "GET",
+                            url: lin,
+                            crossDomain: true,
+                            dataType: "jsonp",
+                            success: function (response) {
+                                console.log("Data berhasil disimpan:", response);
+                            },
+                            error: function (xhr, status, error) {
+                                console.error("Gagal menyimpan data:", error);
+                            }
+                        });
 
-            let app = this;
-            $.getJSON(url, function (json) {
-              // console.log(json.data);
-              app.allPlayers1 = json.data;
-            });
-          },
+                        console.log("Mengirim data untuk player:", player);
+                    });
+                },
 
-          ambilDataMatches() {
-        this.dashboardMatches = [];  // Pastikan ada data property allMatches di data()
 
-        var url = "https://script.google.com/macros/s/AKfycbwwd67df19vRqNmxRIsnfyYhqzaMDiDTXHmHHJW7IHiHoWHtGLLLKf-rnqJqTZRkVLw/exec?action=read&table=matches";
 
-        let app = this;
-        $.getJSON(url, function (json) {
-            app.dashboardMatches = json.data;
+                ambilDataPlayer() {
+                    this.databaseRiil = [];
+
+                    // var url ="https://script.google.com/macros/s/AKfycbyc7wzSrUGxQhcBN5EfVC-rNRj3wncZJOVTWAChXtSwnrHkGjoaoI91bggme_fUOIP9/exec?action=read&table=query";
+                    var url =
+                        "https://script.google.com/macros/s/AKfycbwwd67df19vRqNmxRIsnfyYhqzaMDiDTXHmHHJW7IHiHoWHtGLLLKf-rnqJqTZRkVLw/exec?action=read&table=players";
+
+                    let app = this;
+                    $.getJSON(url, function (json) {
+                        // console.log(json.data);
+                        app.allPlayers1 = json.data;
+                    });
+                },
+
+                ambilDataMatches() {
+                    this.dashboardMatches = [];  // Pastikan ada data property allMatches di data()
+
+                    var url = "https://script.google.com/macros/s/AKfycbwwd67df19vRqNmxRIsnfyYhqzaMDiDTXHmHHJW7IHiHoWHtGLLLKf-rnqJqTZRkVLw/exec?action=read&table=matches";
+
+                    let app = this;
+                    $.getJSON(url, function (json) {
+                        app.dashboardMatches = json.data;
+                    });
+                    // alert("ok");
+                },
+
+                ambilDataRecords() {
+                    this.playerRecords = [];  // Pastikan ada data property allRecords di data()
+
+                    var url = "https://script.google.com/macros/s/AKfycbwwd67df19vRqNmxRIsnfyYhqzaMDiDTXHmHHJW7IHiHoWHtGLLLKf-rnqJqTZRkVLw/exec?action=read&table=records";
+
+                    let app = this;
+                    $.getJSON(url, function (json) {
+                        app.playerRecords = json.data;
+                    });
+                },
+                convertToLocalDate(utcDate) {
+                    const localDate = new Date(utcDate + 'T00:00:00Z');
+                    return localDate.toLocaleDateString('id-ID', { timeZone: 'Asia/Jakarta' });
+                },
+
+
+
+
+            },
+            created() {
+                this.ambilDataPlayer();
+                this.ambilDataMatches();
+                this.ambilDataRecords();
+            },
         });
-        // alert("ok");
-    },
-
-    ambilDataRecords() {
-        this.playerRecords = [];  // Pastikan ada data property allRecords di data()
-
-        var url = "https://script.google.com/macros/s/AKfycbwwd67df19vRqNmxRIsnfyYhqzaMDiDTXHmHHJW7IHiHoWHtGLLLKf-rnqJqTZRkVLw/exec?action=read&table=records";
-
-        let app = this;
-        $.getJSON(url, function (json) {
-            app.playerRecords = json.data;
-        });
-    },
-
-    
-    },
-    created(){
-        this.ambilDataPlayer();
-    this.ambilDataMatches();
-    // this.ambilDataRecords();
-    },
-});
-</script>
+    </script>
 
 </body>
+
 </html>
