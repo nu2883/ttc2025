@@ -24,87 +24,79 @@
             border-radius: 10px;
         }
         @media (max-width: 768px) {
-    table {
-        font-size: 12px;
-    }
-    table th, table td {
-        padding: 5px;
-        white-space: nowrap;
-    }
-    .score-buttons button {
-        width: 30px;
-        font-size: 12px;
-    }
-    .fixed-button {
-        width: 50px;
-        height: 50px;
-        font-size: 12px;
-    }
-    .btn-block {
-        font-size: 14px;
-        padding: 8px;
-    }
-    h2, h3 {
-        font-size: 16px;
-    }
-    .modal-dialog {
-        max-width: 90%;
-    }
-    .login-container {
-        width: 90%;
-    }
-}
+            table {
+                font-size: 12px;
+            }
+            table th, table td {
+                padding: 5px;
+                white-space: nowrap;
+            }
+            .score-buttons button {
+                width: 30px;
+                font-size: 12px;
+            }
+            .fixed-button {
+                width: 50px;
+                height: 50px;
+                font-size: 12px;
+            }
+            .btn-block {
+                font-size: 14px;
+                padding: 8px;
+            }
+            h2, h3 {
+                font-size: 16px;
+            }
+            .modal-dialog {
+                max-width: 90%;
+            }
+            .login-container {
+                width: 90%;
+            }
+        }
     </style>
 </head>
 <body>
 
-<div id="app" class="container mt-4">
+<div id="app" class="container mt-3">
 
-    <!-- Login Form -->
     <div v-if="!isLoggedIn" class="login-container">
         <h4 class="text-center">Login</h4>
         <input type="text" class="form-control mb-2" placeholder="Username" v-model="username">
         <input type="password" class="form-control mb-2" placeholder="Password" v-model="password">
         <button class="btn btn-primary btn-block" @click="checkLogin">Login</button>
-
-        
     </div>
 
-    <!-- Dashboard -->
     <div v-if="isLoggedIn">
         <h2>Dashboard Pertandingan TTC {{lokasi}} start 10 Maret 2025</h2>
 
-        <!-- {{dashboardMatches}} -->
         <div v-if="dashboardMatches.length > 0">
+            <table class="table table-bordered table-sm">
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Tanggal</th>
+                        <th>Pemain Tim 1</th>
+                        <th>Skor 1</th>
+                        <th>Skor 2</th>
+                        <th>Pemain Tim 2</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="(match, index) in dashboardMatches" :key="index">
+                        <td>{{ index + 1 }}</td>
+                        <td>{{ formatTanggal(match.tanggal) }}</td>
+                        <td>{{ match.namaPemainTim1}}</td>
+                        <td>{{ match.skorTim1 }}</td>
+                        <td>{{ match.skorTim2 }}</td>
+                        <td>{{ match.namaPemainTim2 }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
 
-        
-        <table class="table table-bordered">
-            <thead>
-                <tr>
-                    <th>No</th>
-                    <th>Tanggal</th>
-                    <th>Nama Pemain Tim 1</th>
-                    <th>Skor Tim 1</th>
-                    <th>Skor Tim 2</th>
-                    <th>Nama Pemain Tim 2</th>
-                </tr>
-            </thead>
-            <tbody >
-                <tr  v-for="(match, index) in dashboardMatches" :key="index">
-                    <td>{{ index + 1 }}</td>
-                    <td>{{ formatTanggal(match.tanggal) }}</td>
-                    <td>{{ match.namaPemainTim1}}</td>
-                    <td>{{ match.skorTim1 }}</td>
-                    <td>{{ match.skorTim2 }}</td>
-                    <td>{{ match.namaPemainTim2 }}</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-
-        <!-- Tabel Player Records -->
         <h3>Riwayat Performa Pemain</h3>
-        <table class="table table-striped">
+        <table class="table table-striped table-sm">
             <thead>
                 <tr>
                     <th>No</th>
@@ -128,9 +120,9 @@
                 </tr>
             </tbody>
         </table>
-        <!-- Tabel Player Records -->
+
         <h3>Ranking Pemain</h3>
-        <table class="table table-bordered">
+        <table class="table table-bordered table-sm">
             <thead>
                 <tr>
                     <th>Ranking</th>
@@ -152,16 +144,11 @@
                 </tr>
             </tbody>
         </table>
-        
-        
 
-
-        <!-- Tombol Rekam -->
         <button class="btn btn-danger fixed-button" @click="openModal()">Rekam</button>
-    
-        <!-- Modal Pilih Tim -->
+
         <div class="modal fade" :class="{'show': showTeamModal}" style="display: block;" v-if="showTeamModal">
-            <div class="modal-dialog">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">Pilih Tim dan Tanggal</h5>
@@ -173,28 +160,27 @@
                             <input type="date" class="form-control" v-model="matchDate">
                         </div>
                         <div class="row">
-                            <div class="col-6">
+                            <div class="col-6 mb-2">
                                 <button class="btn btn-primary btn-block" @click="selectTeam('Tim 1')">
                                     Tim 1 <br><small>{{ displayTeamPlayers('Tim 1') }}</small>
                                 </button>
                             </div>
-                            <div class="col-6">
+                            <div class="col-6 mb-2">
                                 <button class="btn btn-success btn-block" @click="selectTeam('Tim 2')">
                                     Tim 2 <br><small>{{ displayTeamPlayers('Tim 2') }}</small>
                                 </button>
                             </div>
                         </div>
-    
-                        <!-- Pilih Skor Tim 1 dan Tim 2 sejajar -->
+
                         <div class="row mt-3">
                             <div class="col-6">
                                 <h5>Skor Tim 1</h5>
                                 <div class="d-flex flex-wrap justify-content-center score-buttons">
-                                    <button 
+                                    <button
                                         class="btn btn-outline-primary"
                                         :class="{'btn-primary text-white': scores['Tim 1'] === score}"
-                                        v-for="score in 10" 
-                                        :key="'t1-'+score" 
+                                        v-for="score in 10"
+                                        :key="'t1-'+score"
                                         @click="setScore('Tim 1', score)">
                                         {{ score }}
                                     </button>
@@ -203,34 +189,33 @@
                             <div class="col-6">
                                 <h5>Skor Tim 2</h5>
                                 <div class="d-flex flex-wrap justify-content-center score-buttons">
-                                    <button 
+                                    <button
                                         class="btn btn-outline-success"
                                         :class="{'btn-success text-white': scores['Tim 2'] === score}"
-                                        v-for="score in 10" 
-                                        :key="'t2-'+score" 
+                                        v-for="score in 10"
+                                        :key="'t2-'+score"
                                         @click="setScore('Tim 2', score)">
                                         {{ score }}
                                     </button>
                                 </div>
                             </div>
                         </div>
-    
+
                         <button class="btn btn-primary mt-3 btn-block" @click="saveData()">Simpan</button>
                     </div>
                 </div>
             </div>
         </div>
-    
-        <!-- Modal Pilih Pemain -->
+
         <div class="modal fade" :class="{'show': showPlayerModal}" style="display: block;" v-if="showPlayerModal">
-            <div class="modal-dialog">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">Pilih Pemain untuk {{ selectedTeam }}</h5>
                         <button type="button" class="close" @click="showPlayerModal = false">&times;</button>
                     </div>
                     <div class="modal-body">
-                        <button class="btn btn-outline-secondary btn-block"
+                        <button class="btn btn-outline-secondary btn-block mb-2"
                                 v-for="player in sortedAvailablePlayers"
                                 :key="player"
                                 @click="addPlayerToTeam(player)">
